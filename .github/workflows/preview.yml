@@ -26,6 +26,8 @@ jobs:
           cache: true
           run-install: true
       - name: Pack
-        run: vp pack
+        run: |
+          vp pack
+          vp pm pack --out out.tar.gz
       - name: Publish preview release
-        run: vp exec pkg-pr-new publish
+        run: vp exec pkg-pr-new publish out.tar.gz
