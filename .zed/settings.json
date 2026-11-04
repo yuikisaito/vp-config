@@ -209,7 +209,8 @@
             "name": "oxfmt"
           }
         }
-      ]
+      ],
+      "language_servers": ["typescript-language-server", "!vtsls", "..."]
     },
     "TSX": {
       "format_on_save": "on",
