@@ -77,7 +77,7 @@
           }
         }
       ],
-      "language_servers": ["typescript-language-server", "!vtsls", "..."]
+      "language_servers": ["typescript-language-server", "!vtsls", "!eslint", "..."]
     },
     "YAML": {
       "format_on_save": "on",
