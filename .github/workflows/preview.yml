@@ -1,0 +1,30 @@
+name: Preview release
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    types: [opened, synchronize]
+
+defaults:
+  run:
+    shell: bash
+
+permissions:
+  pull-requests: read
+
+jobs:
+  preview:
+    if: ${{ github.repository == 'yuikisaito/vp-config' }}
+    runs-on: ubuntu-26.04-arm
+    steps:
+      - uses: actions/checkout@v7
+      - uses: voidzero-dev/setup-vp@v1
+        with:
+          cache: true
+          run-install: true
+      - name: Pack
+        run: vp pack
+      - name: Publish preview release
+        run: vp exec pkg-pr-new publish
