@@ -22,8 +22,8 @@ jobs:
   check:
     runs-on: ubuntu-26.04-arm
     steps:
-      - uses: actions/checkout@v7
-      - uses: voidzero-dev/setup-vp@v1
+      - uses: actions/checkout@v7.0.1
+      - uses: voidzero-dev/setup-vp@v1.15.0
         with:
           cache: true
           run-install: true
