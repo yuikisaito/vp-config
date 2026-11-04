@@ -1,0 +1,42 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+defaults:
+  run:
+    shell: bash
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-26.04-arm
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: voidzero-dev/setup-vp@v1.15.0
+        with:
+          cache: true
+          run-install: true
+      - name: Check
+        run: vp check
+      - name: Test
+        run: vp test
+      - name: Build
+        run: vp pack
+
+  publish:
+    if: ${{ github.repository == 'yuikisaito/vp-config' }}
+    runs-on: ubuntu-26.04-arm
+    needs: [check]
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: voidzero-dev/setup-vp@v1.15.0
+        with:
+          cache: true
+          run-install: true
+      - name: Publish
+        run: vp pm publish

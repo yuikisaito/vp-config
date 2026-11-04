@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    types: [opened, synchronize]
+
+defaults:
+  run:
+    shell: bash
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref_name != 'master' }}
+
+jobs:
+  check:
+    runs-on: ubuntu-26.04-arm
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: voidzero-dev/setup-vp@v1.15.0
+        with:
+          cache: true
+          run-install: true
+      - name: Check
+        run: vp check
+      - name: Test
+        run: vp test
+      - name: Build
+        run: vp pack
