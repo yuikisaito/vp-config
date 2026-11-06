@@ -5,6 +5,6 @@ export const defaultPackConfig = {
     generator: "tsgo",
   },
   exports: true,
-  nodeProtocol: true,
   minify: true,
+  nodeProtocol: true,
 } satisfies PackUserConfig;

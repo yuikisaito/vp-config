@@ -10,8 +10,6 @@ export const defaultLintConfig = {
     correctness: "error",
     suspicious: "warn",
     perf: "warn",
-    pedantic: "warn",
-    style: "warn",
   },
   rules: {
     // ESLint
@@ -134,7 +132,12 @@ export const defaultLintConfig = {
     "import/no-absolute-path": "error",
     "import/no-anonymous-default-export": "warn",
     "import/no-cycle": "warn",
-    "import/no-duplicates": "error",
+    "eslint/no-duplicate-imports": [
+      "error",
+      {
+        allowSeparateTypeImports: true,
+      },
+    ],
     "import/no-empty-named-blocks": "error",
     "import/no-mutable-exports": "error",
     "import/no-named-as-default": "warn",
