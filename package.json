@@ -25,16 +25,22 @@
   },
   "scripts": {
     "build": "vp pack",
-    "dev": "vp pack --watch",
-    "test": "vp test",
     "check": "vp check",
-    "prepublishOnly": "vp run build"
+    "dev": "vp pack --watch",
+    "prepublishOnly": "vp run build",
+    "test": "vp test"
+  },
+  "dependencies": {
+    "defu": "^6.1.7"
   },
   "devDependencies": {
     "@types/node": "^26.6.5",
     "pkg-pr-new": "^0.0.93",
     "typescript": "^7.0.2",
     "vite-plus": "catalog:"
+  },
+  "peerDependencies": {
+    "vite-plus": "^1.4.0"
   },
   "devEngines": {
     "packageManager": {
