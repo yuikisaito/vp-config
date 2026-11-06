@@ -16,7 +16,7 @@ export function mergeConfig(
   ...overrides: (UserConfig | undefined | null)[]
 ): UserConfig {
   const base = defaults ?? {};
-  return defu(overrides, base);
+  return (defu as (...args: readonly unknown[]) => UserConfig)(...overrides.toReversed(), base);
 }
 
 export { mergeConfig as merge };
