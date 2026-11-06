@@ -1,3 +1,5 @@
+import type { ConfigEnv } from "vite-plus";
+
 import { defineConfig as vizeDefineConfig, withVue } from "@vizejs/vite-plugin/vite-plus";
 import { describe, expect, it } from "vite-plus/test";
 
@@ -9,7 +11,7 @@ import {
   defineConfig,
 } from "../src/index.ts";
 
-const env = { command: "serve", mode: "development" } as const;
+const env = { command: "serve", mode: "development" } satisfies ConfigEnv;
 
 function flattenPluginNames(plugins: unknown): string[] {
   if (Array.isArray(plugins)) {
