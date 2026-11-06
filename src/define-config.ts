@@ -17,8 +17,6 @@ export const defaultConfig: UserConfig = {
   pack: defaultPackConfig,
 };
 
-export const defaultUserConfig = defaultConfig;
-
 function resolveConfig(config?: ViteUserConfigExport): ViteUserConfigExport {
   if (!config) {
     return defaultConfig;
