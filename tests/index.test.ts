@@ -41,6 +41,22 @@ describe("mergeConfig", () => {
     expect(merged.server?.port).toBe(3000);
     expect(merged.server?.open).toBe(true);
   });
+
+  it("concatenates array values instead of overriding them", () => {
+    const base = {
+      lint: {
+        plugins: ["typescript", "import"],
+      },
+    } satisfies UserConfig;
+    const user = {
+      lint: {
+        plugins: ["unicorn"],
+      },
+    } satisfies UserConfig;
+    const merged = mergeConfig(base, user);
+
+    expect(merged.lint?.plugins).toStrictEqual(["unicorn", "typescript", "import"]);
+  });
 });
 
 describe("defineConfig", () => {
@@ -74,6 +90,16 @@ describe("defineConfig", () => {
     });
     expect(config.fmt?.proseWrap).toBe("never");
     expect(config.fmt?.arrowParens).toBe("avoid");
+  });
+
+  it("appends array values to defaults instead of overriding them", () => {
+    const config = defineConfig({
+      lint: {
+        plugins: ["react"],
+      },
+    });
+
+    expect(config.lint?.plugins).toStrictEqual(["react", ...defaultLintConfig.plugins]);
   });
 
   it("supports function configuration", () => {
