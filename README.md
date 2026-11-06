@@ -47,6 +47,51 @@ export default defineConfig(env => ({
 }));
 ```
 
+### Vize
+
+[Vize](https://vizejs.dev/) provides the Vue compiler, linter, formatter, and type checker for
+Vite+. Pass the result of `defineConfig` to Vize's `defineConfig` and chain `.withVue` to add the
+native Vue toolchain.
+
+```bash
+vp add -D @vizejs/vite-plugin
+```
+
+```ts
+import { defineConfig as defineVizeConfig } from "@vizejs/vite-plugin/vite-plus";
+import { defineConfig } from "@yuikisaito/vp-config";
+
+export default defineVizeConfig(
+  defineConfig({
+    server: { port: 3000 },
+  }),
+).withVue({
+  compiler: { sourceMap: true },
+});
+```
+
+The presets remain in effect after `.withVue()`:
+
+- CSS, formatting, and pack defaults are preserved.
+- Default Oxlint plugins and rules stay active. Vize adds its Vue lint layer and disables
+  overlapping Vue rules in Oxlint.
+- Vue files are excluded from Oxfmt and formatted by Vize instead.
+- Vize's tasks (`lint`, `fmt`, `typecheck`, `check`, and others) are generated without overwriting
+  existing package scripts. Scripts that already exist are kept, and the generated Vize task gets a
+  `vize:` prefix.
+
+Use the standalone `withVue` helper when the Vite+ config is exported elsewhere:
+
+```ts
+import { withVue } from "@vizejs/vite-plugin/vite-plus";
+import { defineConfig } from "@yuikisaito/vp-config";
+
+export default withVue({ compiler: { sourceMap: true } }, defineConfig());
+```
+
+See the [Vize Vite+ guide](https://vizejs.dev/guide/vite-plus/) for compiler, lint, format,
+type-check, and pack options.
+
 ### Merge
 
 Merging uses [`defu`](https://github.com/unjs/defu).
