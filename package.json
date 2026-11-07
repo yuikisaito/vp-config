@@ -25,9 +25,11 @@
   },
   "scripts": {
     "build": "vp pack",
+    "changelog": "changelogithub",
     "check": "vp check",
     "dev": "vp pack --watch",
     "prepublishOnly": "vp run build",
+    "release": "bumpp",
     "test": "vp test"
   },
   "dependencies": {
@@ -36,6 +38,8 @@
   "devDependencies": {
     "@types/node": "^26.6.5",
     "@vizejs/vite-plugin": "^0.691.0",
+    "bumpp": "^12.3.0",
+    "changelogithub": "^15.0.5",
     "pkg-pr-new": "^0.0.93",
     "typescript": "^7.0.2",
     "vite-plus": "catalog:"

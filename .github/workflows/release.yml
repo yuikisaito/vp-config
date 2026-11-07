@@ -32,11 +32,19 @@ jobs:
     if: ${{ github.repository == 'yuikisaito/vp-config' }}
     runs-on: ubuntu-26.04-arm
     needs: [check]
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 0
       - uses: voidzero-dev/setup-vp@v1.15.0
         with:
           cache: true
           run-install: true
       - name: Publish
         run: vp pm publish
+      - name: Release
+        run: vpr changelog
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
