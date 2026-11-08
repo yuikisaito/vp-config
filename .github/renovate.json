@@ -2,5 +2,22 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:recommended"],
   "timezone": "Asia/Tokyo",
-  "schedule": ["* 18 * * 5"]
+  "schedule": ["* 18 * * 5"],
+  "minimumReleaseAge": "1 day",
+  "packageRules": [
+    {
+      "groupName": "vite+",
+      "groupSlug": "vite-plus",
+      "matchPackageNames": ["vite-plus", "vite", "@voidzero-dev/**"],
+      "description": "pnpm-workspace.yaml pins vite and vite-plus to the catalog version via an override, so bump them together."
+    },
+    {
+      "matchPackageNames": ["vite-plus", "vite", "@voidzero-dev/**", "@vizejs/**"],
+      "minimumReleaseAge": "0",
+      "description": "These packages are excluded from minimumReleaseAge in pnpm-workspace.yaml, so accept their releases immediately."
+    }
+  ],
+  "vulnerabilityAlerts": {
+    "postUpdateOptions": ["pnpmDedupe"]
+  }
 }
