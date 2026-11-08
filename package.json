@@ -37,7 +37,7 @@
   },
   "devDependencies": {
     "@types/node": "^26.6.5",
-    "@vizejs/vite-plugin": "^0.691.0",
+    "@vizejs/vite-plugin": "^0.716.0",
     "bumpp": "^12.3.0",
     "changelogithub": "^15.0.5",
     "pkg-pr-new": "^0.0.93",
