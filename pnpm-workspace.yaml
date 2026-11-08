@@ -8,6 +8,7 @@ peerDependencyRules:
     - vite
   allowedVersions:
     vite: "*"
+minimumReleaseAge: 1440
 minimumReleaseAgeExclude:
   - vite-plus
   - "@voidzero-dev/*"
