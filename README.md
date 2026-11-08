@@ -1,5 +1,10 @@
 # @yuikisaito/vp-config
 
+[![npmx.dev version](https://npmx.dev/api/registry/badge/version/@yuikisaito/vp-config)](https://npmx.dev/package/@yuikisaito/vp-config)
+[![npmx.dev install size](https://npmx.dev/api/registry/badge/size/@yuikisaito/vp-config)](https://npmx.dev/package/@yuikisaito/vp-config)
+[![pkg.pr.new](https://pkg.pr.new/badge/yuikisaito/vp-config)](https://pkg.pr.new/~/yuikisaito/vp-config)
+[![CI](https://github.com/yuikisaito/vp-config/actions/workflows/ci.yml/badge.svg)](https://github.com/yuikisaito/vp-config/actions/workflows/ci.yml)
+
 Shared [Vite+](https://viteplus.dev/) configuration. `defineConfig` wraps Vite+'s `defineConfig` and
 merges your config over presets for CSS, formatting, linting, and packaging.
 
