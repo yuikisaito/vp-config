@@ -32,9 +32,6 @@
     "release": "bumpp",
     "test": "vp test"
   },
-  "dependencies": {
-    "defu": "^6.1.7"
-  },
   "devDependencies": {
     "@types/node": "^26.6.5",
     "@vizejs/vite-plugin": "^0.691.0",

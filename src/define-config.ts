@@ -2,38 +2,26 @@ import type { ConfigEnv, UserConfig, ViteUserConfigExport } from "vite-plus";
 
 import { defineConfig as defineVitePlusConfig } from "vite-plus";
 
-import { mergeConfig } from "./merge.ts";
-import {
-  defaultCssConfig,
-  defaultFmtConfig,
-  defaultLintConfig,
-  defaultPackConfig,
-} from "./presets/index.ts";
-
-export const defaultConfig: UserConfig = {
-  css: defaultCssConfig,
-  fmt: defaultFmtConfig,
-  lint: defaultLintConfig,
-  pack: defaultPackConfig,
-};
+import { mergePresetConfig } from "./merge/index.ts";
+import { presetConfig } from "./presets/index.ts";
 
 function resolveConfig(config?: ViteUserConfigExport): ViteUserConfigExport {
   if (!config) {
-    return defaultConfig;
+    return presetConfig;
   }
   if (typeof config === "function") {
     return (env: ConfigEnv) => {
       const result = config(env);
       if (result instanceof Promise) {
-        return result.then(res => mergeConfig(defaultConfig, res));
+        return result.then(res => mergePresetConfig(presetConfig, res));
       }
-      return mergeConfig(defaultConfig, result);
+      return mergePresetConfig(presetConfig, result);
     };
   }
   if (config instanceof Promise) {
-    return config.then(res => mergeConfig(defaultConfig, res));
+    return config.then(res => mergePresetConfig(presetConfig, res));
   }
-  return mergeConfig(defaultConfig, config);
+  return mergePresetConfig(presetConfig, config);
 }
 
 /**
