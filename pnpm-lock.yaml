@@ -191,6 +191,9 @@ importers:
       changelogithub:
         specifier: ^15.0.5
         version: 15.0.5
+      oxlint-plugin-eslint:
+        specifier: ^1.93.0
+        version: 1.93.0
       pkg-pr-new:
         specifier: ^0.0.93
         version: 0.0.93
@@ -1638,6 +1641,10 @@ packages:
         optional: true
       vite-plus:
         optional: true
+
+  oxlint-plugin-eslint@1.93.0:
+    resolution: {integrity: sha512-NN1PcS4IUrxeDQqBCOpqa8qhsTcxR5j7l0kTqp8Le+904FeIYwkG4qwbYtpR7e3G8JlKi6qaZ0VEsooPi++wSA==}
+    engines: {node: ^20.19.0 || >=22.12.0}
 
   oxlint-tsgolint@7.0.2004:
     resolution: {integrity: sha512-vQ9WDF3fiZJvRdSDosNOflerOCOpwol6vWzVDxW76RcU19cjTh7engvkHLvmv+tzedR8fAiJUVUGr6IVZdkzXQ==}
@@ -3090,6 +3097,8 @@ snapshots:
       '@oxfmt/binding-win32-ia32-msvc': 0.74.0
       '@oxfmt/binding-win32-x64-msvc': 0.74.0
       vite-plus: 1.4.0(@types/node@26.6.6)(@vitest/ui@5.0.5)(jiti@2.7.0)(typescript@7.0.2)(yaml@2.9.1)
+
+  oxlint-plugin-eslint@1.93.0: {}
 
   oxlint-tsgolint@7.0.2004:
     optionalDependencies:

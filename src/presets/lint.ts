@@ -2,6 +2,7 @@ import type { OxlintConfig } from "vite-plus/lint";
 
 export const defaultLintConfig = {
   plugins: ["typescript", "import", "promise", "unicorn", "node", "oxc", "vitest", "jsdoc"],
+  jsPlugins: [{ name: "eslint-js", specifier: "oxlint-plugin-eslint" }],
   options: {
     typeAware: true,
     typeCheck: true,
@@ -78,6 +79,14 @@ export const defaultLintConfig = {
     "eslint/require-unicode-regexp": "warn",
     "eslint/symbol-description": "error",
     "eslint/yoda": "error",
+    "eslint-js/no-restricted-syntax": [
+      "error",
+      {
+        selector:
+          ":matches(:function, TSDeclareFunction, TSEmptyBodyFunctionExpression, TSFunctionType, TSMethodSignature, TSConstructorType, TSParameterProperty) > Identifier[optional!=true] > TSTypeAnnotation > TSUnionType > TSUndefinedKeyword",
+        message: "Please use an optional argument instead of `| undefined`.",
+      },
+    ],
 
     // TypeScript
     "typescript/consistent-type-exports": "error",
