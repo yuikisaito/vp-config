@@ -59,11 +59,11 @@ describe("mergePresetConfig", () => {
 
   it("replaces pack arrays instead of concatenating them", () => {
     const merged = mergePresetConfig(
-      { pack: { entry: ["src/index.ts"], minify: true } },
-      { pack: { entry: ["src/a.ts"] } },
+      { pack: { deps: { neverBundle: ["react"] }, minify: true } },
+      { pack: { deps: { neverBundle: ["vue"] } } },
     );
 
-    expect(merged.pack).toStrictEqual({ entry: ["src/a.ts"], minify: true });
+    expect(merged.pack).toStrictEqual({ deps: { neverBundle: ["vue"] }, minify: true });
   });
 });
 
