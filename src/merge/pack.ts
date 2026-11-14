@@ -29,7 +29,7 @@ export function mergePackConfig(
 }
 
 function mergePackEntry(
-  defaults: PackUserConfig | undefined,
+  defaults: PresetConfig["pack"] | undefined,
   overrides: PackUserConfig | undefined,
 ): PackUserConfig {
   return mergeTsdownConfig(defaults ?? {}, overrides ?? {}) as PackUserConfig;
