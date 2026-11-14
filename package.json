@@ -40,11 +40,13 @@
     "@vizejs/vite-plugin": "^0.752.0",
     "bumpp": "^12.3.0",
     "changelogithub": "^15.0.5",
+    "oxlint-plugin-eslint": "^1.93.0",
     "pkg-pr-new": "^0.0.93",
     "typescript": "^7.0.2",
     "vite-plus": "catalog:"
   },
   "peerDependencies": {
+    "oxlint-plugin-eslint": "^1.93.0",
     "vite-plus": "^1.4.0"
   },
   "devEngines": {
