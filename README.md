@@ -99,10 +99,13 @@ type-check, and pack options.
 
 ### Merge
 
-Merging uses [`defu`](https://github.com/unjs/defu).
+Merging uses Vite's [`mergeConfig`](https://vite.dev/config/#merging-configs).
 
 - Objects merge deeply, key by key. Later values win.
-- Arrays are concatenated. Items from the later config come first.
+- Arrays are concatenated. Items from the base config come first, and items from the later config
+  are appended.
+- `pack` arrays are treated as separate build targets. The base options are applied to every target
+  instead of being added as another target.
 
 ```ts
 defineConfig({
@@ -110,7 +113,7 @@ defineConfig({
     plugins: ["react"],
   },
 });
-// plugins: ["react", "typescript", "import", "promise", "unicorn", "node", "oxc", "vitest", "jsdoc"]
+// plugins: ["typescript", "import", "promise", "unicorn", "node", "oxc", "vitest", "jsdoc", "react"]
 ```
 
 The same helper is exported as `mergeConfig` (alias `merge`). The first argument is the base. Each
