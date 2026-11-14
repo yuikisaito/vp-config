@@ -1,7 +1,8 @@
 import type { CSSOptions } from "vite-plus";
 import type { OxfmtConfig } from "vite-plus/fmt";
 import type { OxlintConfig } from "vite-plus/lint";
-import type { PackUserConfig } from "vite-plus/pack";
+
+import type { PackPresetConfig } from "./pack.ts";
 
 import { defaultCssConfig } from "./css.ts";
 import { defaultFmtConfig } from "./fmt.ts";
@@ -13,15 +14,11 @@ export * from "./lint.ts";
 export * from "./pack.ts";
 export * from "./css.ts";
 
-/**
- * Configuration that `defineConfig` applies before the user's config.
- *
- * `pack` omits `entry` because entries are project-specific and belong in the user's config.
- */
+/** Configuration that `defineConfig` applies before the user's config. */
 export interface PresetConfig {
   fmt?: OxfmtConfig;
   lint?: OxlintConfig;
-  pack?: Omit<PackUserConfig, "entry">;
+  pack?: PackPresetConfig;
   css?: CSSOptions;
 }
 
