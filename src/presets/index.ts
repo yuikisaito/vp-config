@@ -13,6 +13,11 @@ export * from "./lint.ts";
 export * from "./pack.ts";
 export * from "./css.ts";
 
+/**
+ * Configuration that `defineConfig` applies before the user's config.
+ *
+ * `pack` omits `entry` because entries are project-specific and belong in the user's config.
+ */
 export interface PresetConfig {
   fmt?: OxfmtConfig;
   lint?: OxlintConfig;

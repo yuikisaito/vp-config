@@ -99,13 +99,16 @@ type-check, and pack options.
 
 ### Merge
 
-Merging uses Vite's [`mergeConfig`](https://vite.dev/config/#merging-configs).
+Presets are merged into your config. The shared fields `fmt`, `lint`, and `css` use Vite's
+[`mergeConfig`](https://vite.dev/config/#merging-configs), while `pack` uses tsdown's merge
+semantics.
 
 - Objects merge deeply, key by key. Later values win.
-- Arrays are concatenated. Items from the base config come first, and items from the later config
-  are appended.
-- `pack` arrays are treated as separate build targets. The base options are applied to every target
-  instead of being added as another target.
+- Shared fields concatenate arrays. Items from the preset come first, and items from your config are
+  appended.
+- `pack` arrays are treated as separate build targets. The preset options are applied to every
+  target instead of being added as another target.
+- `pack` arrays other than `plugins` are replaced by your config, matching tsdown's behavior.
 
 ```ts
 defineConfig({
@@ -116,13 +119,24 @@ defineConfig({
 // plugins: ["typescript", "import", "promise", "unicorn", "node", "oxc", "vitest", "jsdoc", "react"]
 ```
 
-The same helper is exported as `mergeConfig` (alias `merge`). The first argument is the base. Each
-following argument overrides it in order. `null` and `undefined` are skipped.
+Pack presets cannot set `entry`, since entries are project-specific. Define entries in your own
+`pack` config. Targets that omit `entry` fall back to tsdown's default entry resolution.
 
 ```ts
-import { mergeConfig } from "@yuikisaito/vp-config";
+defineConfig({
+  pack: {
+    entry: ["src/index.ts", "src/cli.ts"],
+  },
+});
+```
 
-const config = mergeConfig(base, overrideA, overrideB);
+`mergePresetConfig`, `presetConfig`, and the `PresetConfig` type are exported for composing presets
+manually.
+
+```ts
+import { mergePresetConfig, presetConfig } from "@yuikisaito/vp-config";
+
+const config = mergePresetConfig(presetConfig, userConfig);
 ```
 
 ## Development
