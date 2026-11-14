@@ -16,7 +16,7 @@ export * from "./css.ts";
 export interface PresetConfig {
   fmt?: OxfmtConfig;
   lint?: OxlintConfig;
-  pack?: PackUserConfig;
+  pack?: Omit<PackUserConfig, "entry">;
   css?: CSSOptions;
 }
 
