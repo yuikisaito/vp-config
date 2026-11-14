@@ -7,6 +7,7 @@ export const defaultFmtConfig = {
     separateReturnsFromParam: true,
     separateTagGroups: true,
   },
+  ignorePatterns: ["skills/**"],
   overrides: [
     {
       files: ["AGENTS.md"],
