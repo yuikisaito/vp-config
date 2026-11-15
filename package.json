@@ -47,7 +47,13 @@
   },
   "peerDependencies": {
     "oxlint-plugin-eslint": "^1.93.0",
+    "@vizejs/vite-plugin": "^0.752.0",
     "vite-plus": "^1.4.0"
+  },
+  "peerDependenciesMeta": {
+    "@vizejs/vite-plugin": {
+      "optional": true
+    }
   },
   "devEngines": {
     "packageManager": {

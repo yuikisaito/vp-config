@@ -55,8 +55,22 @@ export default defineConfig(env => ({
 ### Vize
 
 [Vize](https://vizejs.dev/) provides the Vue compiler, linter, formatter, and type checker for
-Vite+. Pass the result of `defineConfig` to Vize's `defineConfig` and chain `.withVue` to add the
-native Vue toolchain.
+Vite+.
+
+When `vue` or `vize` is present in your project's dependencies (`dependencies`, `devDependencies`,
+`peerDependencies`, or `optionalDependencies`), `defineConfig` automatically injects Vize's
+configuration via `vitePlusConfig` without any extra setup:
+
+```ts
+import { defineConfig } from "@yuikisaito/vp-config";
+
+export default defineConfig({
+  server: { port: 3000 },
+});
+```
+
+You can also explicitly pass the result of `defineConfig` to Vize's `defineConfig` and chain
+`.withVue` to add the native Vue toolchain:
 
 ```bash
 vp add -D @vizejs/vite-plugin

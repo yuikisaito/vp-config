@@ -9,6 +9,7 @@ import {
   defaultLintConfig,
   defaultPackConfig,
 } from "./presets/index.ts";
+import { applyVizeConfig, detectVueOrVize } from "./vize.ts";
 
 export const defaultConfig: UserConfig = {
   css: defaultCssConfig,
@@ -18,26 +19,40 @@ export const defaultConfig: UserConfig = {
 };
 
 function resolveConfig(config?: ViteUserConfigExport): ViteUserConfigExport {
+  const isVueOrVize = detectVueOrVize();
+
   if (!config) {
+    if (isVueOrVize) {
+      return applyVizeConfig(defaultConfig);
+    }
     return defaultConfig;
   }
   if (typeof config === "function") {
     return (env: ConfigEnv) => {
       const result = config(env);
       if (result instanceof Promise) {
-        return result.then(res => mergeConfig(defaultConfig, res));
+        return result.then(res => {
+          const merged = mergeConfig(defaultConfig, res);
+          return isVueOrVize ? applyVizeConfig(merged) : merged;
+        });
       }
-      return mergeConfig(defaultConfig, result);
+      const merged = mergeConfig(defaultConfig, result);
+      return isVueOrVize ? applyVizeConfig(merged) : merged;
     };
   }
   if (config instanceof Promise) {
-    return config.then(res => mergeConfig(defaultConfig, res));
+    return config.then(res => {
+      const merged = mergeConfig(defaultConfig, res);
+      return isVueOrVize ? applyVizeConfig(merged) : merged;
+    });
   }
-  return mergeConfig(defaultConfig, config);
+  const merged = mergeConfig(defaultConfig, config);
+  return isVueOrVize ? applyVizeConfig(merged) : merged;
 }
 
 /**
- * Defines a Vite+ configuration with default presets applied.
+ * Defines a Vite+ configuration with default presets applied. Automatically injects Vize
+ * configuration when `vue` or `vize` is present in dependencies.
  *
  * @param config - The user's configuration export (object, Promise, or callback function).
  *
