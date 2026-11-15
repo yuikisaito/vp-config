@@ -172,4 +172,48 @@ describe("defineConfig", () => {
     expect(config.server?.port).toBe(9000);
     expect(config.css?.transformer).toBe("lightningcss");
   });
+
+  it("supports variadic arguments in defineConfig", () => {
+    const config = defineConfig(
+      { server: { port: 3000 } },
+      { server: { port: 4000, open: true } },
+      { fmt: { proseWrap: "never" } },
+    );
+
+    expect(config.server?.port).toBe(4000);
+    expect(config.server?.open).toBe(true);
+    expect(config.fmt?.proseWrap).toBe("never");
+    expect(config.fmt?.arrowParens).toBe("avoid");
+    expect(config.css?.transformer).toBe(defaultCssConfig.transformer);
+  });
+
+  it("supports nested arrays and nullish items in variadic defineConfig", () => {
+    const config = defineConfig([{ server: { port: 3000 } }, null], undefined, [
+      { server: { port: 5000 } },
+    ]);
+
+    expect(config.server?.port).toBe(5000);
+    expect(config.css?.transformer).toBe(defaultCssConfig.transformer);
+  });
+
+  it("supports mixing objects and functions in variadic defineConfig", () => {
+    const configFn = defineConfig({ server: { port: 3000 } }, env => ({
+      server: {
+        port: env.mode === "production" ? 8080 : 3000,
+        open: true,
+      },
+    }));
+
+    expect(configFn).toBeTypeOf("function");
+    const config = (
+      configFn as (env: { command: string; mode: string }) => {
+        server?: { port?: number; open?: boolean };
+        css?: { transformer?: string };
+      }
+    )({ command: "serve", mode: "production" });
+
+    expect(config.server?.port).toBe(8080);
+    expect(config.server?.open).toBe(true);
+    expect(config.css?.transformer).toBe(defaultCssConfig.transformer);
+  });
 });

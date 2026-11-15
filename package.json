@@ -32,6 +32,9 @@
     "release": "bumpp",
     "test": "vp test"
   },
+  "dependencies": {
+    "local-pkg": "^2.0.0"
+  },
   "devDependencies": {
     "@types/node": "^26.6.5",
     "@vizejs/vite-plugin": "^0.752.0",
@@ -43,8 +46,14 @@
     "vite-plus": "catalog:"
   },
   "peerDependencies": {
+    "@vizejs/vite-plugin": "^0.752.0",
     "oxlint-plugin-eslint": "^1.93.0",
     "vite-plus": "^1.4.0"
+  },
+  "peerDependenciesMeta": {
+    "@vizejs/vite-plugin": {
+      "optional": true
+    }
   },
   "devEngines": {
     "packageManager": {

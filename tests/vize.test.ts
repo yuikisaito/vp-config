@@ -1,14 +1,23 @@
-import type { ConfigEnv } from "vite-plus";
+import type { ConfigEnv, UserConfig } from "vite-plus";
 
-import { defineConfig as vizeDefineConfig, withVue } from "@vizejs/vite-plugin/vite-plus";
+import {
+  defineConfig as vizeDefineConfig,
+  vitePlusConfig,
+  withVue,
+} from "@vizejs/vite-plugin/vite-plus";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, expect, it } from "vite-plus/test";
 
 import {
+  applyVizeConfig,
   defaultCssConfig,
   defaultFmtConfig,
   defaultLintConfig,
   defaultPackConfig,
   defineConfig,
+  detectVueOrVize,
 } from "../src/index.ts";
 
 const env = { command: "serve", mode: "development" } satisfies ConfigEnv;
@@ -22,6 +31,16 @@ function flattenPluginNames(plugins: unknown): string[] {
     return typeof name === "string" ? [name] : [];
   }
   return [];
+}
+
+function withTempPackageJson(packageJson: object, test: (dir: string) => void): void {
+  const tempDir = mkdtempSync(join(tmpdir(), "vp-config-test-"));
+  try {
+    writeFileSync(join(tempDir, "package.json"), JSON.stringify(packageJson));
+    test(tempDir);
+  } finally {
+    rmSync(tempDir, { recursive: true, force: true });
+  }
 }
 
 describe("Vize compatibility", () => {
@@ -125,5 +144,246 @@ describe("Vize compatibility", () => {
 
     expect(config.css?.transformer).toBe(defaultCssConfig.transformer);
     expect(config.lint?.plugins).toStrictEqual(["vue", ...defaultLintConfig.plugins]);
+  });
+
+  it("supports vitePlusConfig wrapping defineConfig", async () => {
+    const userPlugin = { name: "user-plugin" };
+    const config = await vitePlusConfig(
+      defineConfig({
+        plugins: [userPlugin],
+      }),
+    );
+
+    expect(config.css?.transformer).toBe(defaultCssConfig.transformer);
+    expect(config.fmt?.arrowParens).toBe(defaultFmtConfig.arrowParens);
+    expect(config.fmt?.sortImports).toStrictEqual(defaultFmtConfig.sortImports);
+    expect(config.fmt?.ignorePatterns).toContain("**/*.vue");
+    expect(config.fmt?.ignorePatterns).toContain("**/.vize/**");
+    expect(config.lint?.plugins).toStrictEqual(["vue", ...defaultLintConfig.plugins]);
+    expect(config.lint?.rules?.["eslint/no-var"]).toBe("error");
+    expect(config.lint?.rules?.["eslint/no-unused-vars"]).toBe("off");
+    expect(config.pack).toMatchObject(defaultPackConfig);
+
+    const names = flattenPluginNames(config.plugins);
+    expect(names).toContain("vite-plugin-vize");
+    expect(names).toContain("user-plugin");
+
+    const pack = Array.isArray(config.pack) ? config.pack[0] : config.pack;
+    expect(flattenPluginNames(pack?.plugins)).toContain("unplugin-vize");
+
+    expect(config.run?.tasks).toBeUndefined();
+  });
+
+  it("supports spreading vitePlusConfig output into defineConfig with literal tasks", async () => {
+    const vize = await vitePlusConfig({
+      vue: { compile: { sourceMap: true } },
+    });
+    const config = defineConfig({
+      ...vize,
+      run: {
+        tasks: {
+          check: { command: "vize-vp-task check", cache: false },
+          lint: { command: "vize-vp-task lint", cache: false },
+        },
+      },
+    });
+
+    expect(config.css?.transformer).toBe(defaultCssConfig.transformer);
+    expect(config.fmt?.arrowParens).toBe(defaultFmtConfig.arrowParens);
+    expect(config.fmt?.ignorePatterns).toContain("**/*.vue");
+    expect(config.lint?.rules?.["eslint/no-var"]).toBe("error");
+
+    const names = flattenPluginNames(config.plugins);
+    expect(names).toContain("vite-plugin-vize");
+
+    expect(config.run?.tasks).toStrictEqual({
+      check: { command: "vize-vp-task check", cache: false },
+      lint: { command: "vize-vp-task lint", cache: false },
+    });
+  });
+
+  it("supports passing vize as variadic argument to defineConfig", async () => {
+    const vize = await vitePlusConfig({
+      vue: { compile: { sourceMap: true } },
+    });
+    const config = defineConfig(vize, {
+      server: { port: 3000 },
+      run: {
+        tasks: {
+          check: { command: "vize-vp-task check", cache: false },
+        },
+      },
+    });
+
+    expect(config.server?.port).toBe(3000);
+    expect(config.css?.transformer).toBe(defaultCssConfig.transformer);
+    expect(config.fmt?.arrowParens).toBe(defaultFmtConfig.arrowParens);
+    expect(config.fmt?.ignorePatterns).toContain("**/*.vue");
+    expect(config.lint?.rules?.["eslint/no-var"]).toBe("error");
+
+    const names = flattenPluginNames(config.plugins);
+    expect(names).toContain("vite-plugin-vize");
+
+    expect(config.run?.tasks).toStrictEqual({
+      check: { command: "vize-vp-task check", cache: false },
+    });
+  });
+
+  it("supports mixing vize and function configurations in variadic defineConfig", async () => {
+    const vize = await vitePlusConfig({
+      vue: { compile: { sourceMap: true } },
+    });
+    const configFn = defineConfig(vize, environment => ({
+      server: {
+        port: environment.mode === "production" ? 8080 : 3000,
+      },
+    }));
+
+    expect(configFn).toBeTypeOf("function");
+    const config = await (configFn as (env: ConfigEnv) => Promise<UserConfig>)({
+      command: "serve",
+      mode: "production",
+    });
+
+    expect(config.server?.port).toBe(8080);
+    expect(config.css?.transformer).toBe(defaultCssConfig.transformer);
+    expect(config.fmt?.ignorePatterns).toContain("**/*.vue");
+    expect(flattenPluginNames(config.plugins)).toContain("vite-plugin-vize");
+  });
+});
+
+describe("Vize dependency auto-detection and injection", () => {
+  it("detects vue or vize in dependencies", () => {
+    withTempPackageJson({ dependencies: { vue: "^3.5.0" } }, tempDir => {
+      expect(detectVueOrVize(tempDir)).toBe(true);
+    });
+    withTempPackageJson({ devDependencies: { vize: "^0.750.0" } }, tempDir => {
+      expect(detectVueOrVize(tempDir)).toBe(true);
+    });
+    withTempPackageJson({ dependencies: { react: "^19.0.0" } }, tempDir => {
+      expect(detectVueOrVize(tempDir)).toBe(false);
+    });
+  });
+
+  it("detects vue in a directory with a vue dependency in package.json", () => {
+    withTempPackageJson({ dependencies: { vue: "^3.5.0" } }, tempDir => {
+      expect(detectVueOrVize(tempDir)).toBe(true);
+    });
+  });
+
+  it("detects vize in a directory with a vize devDependency in package.json", () => {
+    withTempPackageJson({ devDependencies: { vize: "^0.752.0" } }, tempDir => {
+      expect(detectVueOrVize(tempDir)).toBe(true);
+    });
+  });
+
+  it("does not detect unrelated dependencies in a temporary project", () => {
+    withTempPackageJson({ dependencies: { react: "^19.0.0" } }, tempDir => {
+      expect(detectVueOrVize(tempDir)).toBe(false);
+    });
+  });
+
+  it("automatically enriches configuration with applyVizeConfig", async () => {
+    const enriched = await applyVizeConfig({
+      css: defaultCssConfig,
+      fmt: defaultFmtConfig,
+      lint: defaultLintConfig,
+      pack: defaultPackConfig,
+    });
+
+    expect(enriched.fmt?.ignorePatterns).toContain("**/*.vue");
+    expect(enriched.fmt?.ignorePatterns).toContain("**/.vize/**");
+    expect(enriched.lint?.plugins).toStrictEqual(["vue", ...defaultLintConfig.plugins]);
+    expect(flattenPluginNames(enriched.plugins)).toContain("vite-plugin-vize");
+  });
+
+  it("automatically injects vize config in defineConfig when vue is in dependencies", async () => {
+    const tempDir = mkdtempSync(join(process.cwd(), ".temp-vize-test-"));
+    const origCwd = process.cwd();
+
+    try {
+      writeFileSync(
+        join(tempDir, "package.json"),
+        JSON.stringify({ dependencies: { vue: "^3.5.0" } }),
+      );
+      process.chdir(tempDir);
+
+      const configPromise = defineConfig({
+        server: { port: 4000 },
+      });
+
+      expect(configPromise).toBeInstanceOf(Promise);
+      const config = (await (configPromise as unknown as Promise<UserConfig>)) as UserConfig;
+
+      expect(config.server?.port).toBe(4000);
+      expect(config.css?.transformer).toBe(defaultCssConfig.transformer);
+      expect(config.fmt?.ignorePatterns).toContain("**/*.vue");
+      expect(config.fmt?.ignorePatterns).toContain("**/.vize/**");
+      expect(config.lint?.plugins).toStrictEqual(["vue", ...defaultLintConfig.plugins]);
+      expect(flattenPluginNames(config.plugins)).toContain("vite-plugin-vize");
+    } finally {
+      process.chdir(origCwd);
+      rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  it("automatically injects vize config when called without arguments and vue is present", async () => {
+    const tempDir = mkdtempSync(join(process.cwd(), ".temp-vize-test-"));
+    const origCwd = process.cwd();
+
+    try {
+      writeFileSync(
+        join(tempDir, "package.json"),
+        JSON.stringify({ devDependencies: { vize: "^0.752.0" } }),
+      );
+      process.chdir(tempDir);
+
+      const configPromise = defineConfig();
+
+      expect(configPromise).toBeInstanceOf(Promise);
+      const config = (await (configPromise as unknown as Promise<UserConfig>)) as UserConfig;
+
+      expect(config.css?.transformer).toBe(defaultCssConfig.transformer);
+      expect(config.fmt?.ignorePatterns).toContain("**/*.vue");
+      expect(config.lint?.plugins).toStrictEqual(["vue", ...defaultLintConfig.plugins]);
+      expect(flattenPluginNames(config.plugins)).toContain("vite-plugin-vize");
+    } finally {
+      process.chdir(origCwd);
+      rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  it("automatically injects vize config when using function configuration and vue is present", async () => {
+    const tempDir = mkdtempSync(join(process.cwd(), ".temp-vize-test-"));
+    const origCwd = process.cwd();
+
+    try {
+      writeFileSync(
+        join(tempDir, "package.json"),
+        JSON.stringify({ dependencies: { vue: "^3.5.0" } }),
+      );
+      process.chdir(tempDir);
+
+      const configFn = defineConfig(environment => ({
+        server: {
+          port: environment.mode === "production" ? 8080 : 3000,
+        },
+      }));
+
+      expect(typeof configFn).toBe("function");
+      const config = await (configFn as (env: ConfigEnv) => Promise<UserConfig>)({
+        command: "serve",
+        mode: "development",
+      });
+
+      expect(config.server?.port).toBe(3000);
+      expect(config.css?.transformer).toBe(defaultCssConfig.transformer);
+      expect(config.fmt?.ignorePatterns).toContain("**/*.vue");
+      expect(config.lint?.plugins).toStrictEqual(["vue", ...defaultLintConfig.plugins]);
+      expect(flattenPluginNames(config.plugins)).toContain("vite-plugin-vize");
+    } finally {
+      process.chdir(origCwd);
+      rmSync(tempDir, { recursive: true, force: true });
+    }
   });
 });

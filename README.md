@@ -52,11 +52,50 @@ export default defineConfig(env => ({
 }));
 ```
 
+### Flat Config
+
+`defineConfig` supports flat configuration with variadic arguments and nested arrays. Later
+configurations take precedence and are merged over presets and earlier configurations using the
+preset merge logic.
+
+```ts
+import { vitePlusConfig } from "@vizejs/vite-plugin/vite-plus";
+import { defineConfig } from "@yuikisaito/vp-config";
+
+const vize = await vitePlusConfig();
+
+export default defineConfig(
+  vize,
+  {
+    server: { port: 3000 },
+  },
+  env => ({
+    server: {
+      open: env.mode === "development",
+    },
+  }),
+);
+```
+
 ### Vize
 
 [Vize](https://vizejs.dev/) provides the Vue compiler, linter, formatter, and type checker for
-Vite+. Pass the result of `defineConfig` to Vize's `defineConfig` and chain `.withVue` to add the
-native Vue toolchain.
+Vite+.
+
+When `vue` or `vize` is present in your project's dependencies (`dependencies`, `devDependencies`,
+`peerDependencies`, or `optionalDependencies`), `defineConfig` automatically injects Vize's
+configuration via `vitePlusConfig` without any extra setup:
+
+```ts
+import { defineConfig } from "@yuikisaito/vp-config";
+
+export default defineConfig({
+  server: { port: 3000 },
+});
+```
+
+You can also explicitly pass the result of `defineConfig` to Vize's `defineConfig` and chain
+`.withVue` to add the native Vue toolchain:
 
 ```bash
 vp add -D @vizejs/vite-plugin
