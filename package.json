@@ -32,6 +32,9 @@
     "release": "bumpp",
     "test": "vp test"
   },
+  "dependencies": {
+    "local-pkg": "^2.0.0"
+  },
   "devDependencies": {
     "@types/node": "^26.6.5",
     "@vizejs/vite-plugin": "^0.752.0",

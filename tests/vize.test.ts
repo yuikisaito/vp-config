@@ -18,7 +18,6 @@ import {
   defaultPackConfig,
   defineConfig,
   detectVueOrVize,
-  hasVueOrVizeDependency,
 } from "../src/index.ts";
 
 const env = { command: "serve", mode: "development" } satisfies ConfigEnv;
@@ -32,6 +31,16 @@ function flattenPluginNames(plugins: unknown): string[] {
     return typeof name === "string" ? [name] : [];
   }
   return [];
+}
+
+function withTempPackageJson(packageJson: object, test: (dir: string) => void): void {
+  const tempDir = mkdtempSync(join(tmpdir(), "vp-config-test-"));
+  try {
+    writeFileSync(join(tempDir, "package.json"), JSON.stringify(packageJson));
+    test(tempDir);
+  } finally {
+    rmSync(tempDir, { recursive: true, force: true });
+  }
 }
 
 describe("Vize compatibility", () => {
@@ -245,50 +254,33 @@ describe("Vize compatibility", () => {
 
 describe("Vize dependency auto-detection and injection", () => {
   it("detects vue or vize in dependencies", () => {
-    expect(hasVueOrVizeDependency({ dependencies: { vue: "^3.5.0" } })).toBe(true);
-    expect(hasVueOrVizeDependency({ devDependencies: { vue: "^3.5.0" } })).toBe(true);
-    expect(hasVueOrVizeDependency({ peerDependencies: { vue: "^3.5.0" } })).toBe(true);
-    expect(hasVueOrVizeDependency({ optionalDependencies: { vue: "^3.5.0" } })).toBe(true);
-
-    expect(hasVueOrVizeDependency({ dependencies: { vize: "^0.750.0" } })).toBe(true);
-    expect(hasVueOrVizeDependency({ devDependencies: { vize: "^0.750.0" } })).toBe(true);
-    expect(hasVueOrVizeDependency({ peerDependencies: { vize: "^0.750.0" } })).toBe(true);
-    expect(hasVueOrVizeDependency({ optionalDependencies: { vize: "^0.750.0" } })).toBe(true);
-
-    expect(hasVueOrVizeDependency({ dependencies: { react: "^19.0.0" } })).toBe(false);
-    expect(hasVueOrVizeDependency({})).toBe(false);
-    expect(hasVueOrVizeDependency(null)).toBe(false);
-    expect(hasVueOrVizeDependency()).toBe(false);
-  });
-
-  it("does not detect vue or vize in current project by default", () => {
-    expect(detectVueOrVize()).toBe(false);
+    withTempPackageJson({ dependencies: { vue: "^3.5.0" } }, tempDir => {
+      expect(detectVueOrVize(tempDir)).toBe(true);
+    });
+    withTempPackageJson({ devDependencies: { vize: "^0.750.0" } }, tempDir => {
+      expect(detectVueOrVize(tempDir)).toBe(true);
+    });
+    withTempPackageJson({ dependencies: { react: "^19.0.0" } }, tempDir => {
+      expect(detectVueOrVize(tempDir)).toBe(false);
+    });
   });
 
   it("detects vue in a directory with a vue dependency in package.json", () => {
-    const tempDir = mkdtempSync(join(tmpdir(), "vp-config-test-"));
-    try {
-      writeFileSync(
-        join(tempDir, "package.json"),
-        JSON.stringify({ dependencies: { vue: "^3.5.0" } }),
-      );
+    withTempPackageJson({ dependencies: { vue: "^3.5.0" } }, tempDir => {
       expect(detectVueOrVize(tempDir)).toBe(true);
-    } finally {
-      rmSync(tempDir, { recursive: true, force: true });
-    }
+    });
   });
 
   it("detects vize in a directory with a vize devDependency in package.json", () => {
-    const tempDir = mkdtempSync(join(tmpdir(), "vp-config-test-"));
-    try {
-      writeFileSync(
-        join(tempDir, "package.json"),
-        JSON.stringify({ devDependencies: { vize: "^0.752.0" } }),
-      );
+    withTempPackageJson({ devDependencies: { vize: "^0.752.0" } }, tempDir => {
       expect(detectVueOrVize(tempDir)).toBe(true);
-    } finally {
-      rmSync(tempDir, { recursive: true, force: true });
-    }
+    });
+  });
+
+  it("does not detect unrelated dependencies in a temporary project", () => {
+    withTempPackageJson({ dependencies: { react: "^19.0.0" } }, tempDir => {
+      expect(detectVueOrVize(tempDir)).toBe(false);
+    });
   });
 
   it("automatically enriches configuration with applyVizeConfig", async () => {
