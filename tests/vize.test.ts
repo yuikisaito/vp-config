@@ -192,6 +192,55 @@ describe("Vize compatibility", () => {
       lint: { command: "vize-vp-task lint", cache: false },
     });
   });
+
+  it("supports passing vize as variadic argument to defineConfig", async () => {
+    const vize = await vitePlusConfig({
+      vue: { compile: { sourceMap: true } },
+    });
+    const config = defineConfig(vize, {
+      server: { port: 3000 },
+      run: {
+        tasks: {
+          check: { command: "vize-vp-task check", cache: false },
+        },
+      },
+    });
+
+    expect(config.server?.port).toBe(3000);
+    expect(config.css?.transformer).toBe(defaultCssConfig.transformer);
+    expect(config.fmt?.arrowParens).toBe(defaultFmtConfig.arrowParens);
+    expect(config.fmt?.ignorePatterns).toContain("**/*.vue");
+    expect(config.lint?.rules?.["eslint/no-var"]).toBe("error");
+
+    const names = flattenPluginNames(config.plugins);
+    expect(names).toContain("vite-plugin-vize");
+
+    expect(config.run?.tasks).toStrictEqual({
+      check: { command: "vize-vp-task check", cache: false },
+    });
+  });
+
+  it("supports mixing vize and function configurations in variadic defineConfig", async () => {
+    const vize = await vitePlusConfig({
+      vue: { compile: { sourceMap: true } },
+    });
+    const configFn = defineConfig(vize, environment => ({
+      server: {
+        port: environment.mode === "production" ? 8080 : 3000,
+      },
+    }));
+
+    expect(configFn).toBeTypeOf("function");
+    const config = await (configFn as (env: ConfigEnv) => Promise<UserConfig>)({
+      command: "serve",
+      mode: "production",
+    });
+
+    expect(config.server?.port).toBe(8080);
+    expect(config.css?.transformer).toBe(defaultCssConfig.transformer);
+    expect(config.fmt?.ignorePatterns).toContain("**/*.vue");
+    expect(flattenPluginNames(config.plugins)).toContain("vite-plugin-vize");
+  });
 });
 
 describe("Vize dependency auto-detection and injection", () => {

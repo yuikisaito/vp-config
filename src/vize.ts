@@ -85,6 +85,24 @@ export function detectVueOrVize(cwd: string = process.cwd()): boolean {
 }
 
 /**
+ * Detects whether the given plugins array or object contains a Vize plugin.
+ *
+ * @param plugins - The plugins option from a Vite configuration.
+ *
+ * @returns `true` if a Vize plugin is found.
+ */
+export function hasVizePlugin(plugins: unknown): boolean {
+  if (Array.isArray(plugins)) {
+    return plugins.some(hasVizePlugin);
+  }
+  if (plugins && typeof plugins === "object" && "name" in plugins) {
+    const { name } = plugins as { name?: unknown };
+    return typeof name === "string" && name.includes("vize");
+  }
+  return false;
+}
+
+/**
  * Injects Vize configuration by delegating to `@vizejs/vite-plugin/vite-plus`'s `vitePlusConfig`.
  *
  * @param config - The base Vite+ configuration to enrich.

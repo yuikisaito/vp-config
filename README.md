@@ -52,6 +52,31 @@ export default defineConfig(env => ({
 }));
 ```
 
+### Flat Config
+
+`defineConfig` supports flat configuration with variadic arguments and nested arrays. Later
+configurations take precedence and are merged over presets and earlier configurations using the
+preset merge logic.
+
+```ts
+import { vitePlusConfig } from "@vizejs/vite-plugin/vite-plus";
+import { defineConfig } from "@yuikisaito/vp-config";
+
+const vize = await vitePlusConfig();
+
+export default defineConfig(
+  vize,
+  {
+    server: { port: 3000 },
+  },
+  env => ({
+    server: {
+      open: env.mode === "development",
+    },
+  }),
+);
+```
+
 ### Vize
 
 [Vize](https://vizejs.dev/) provides the Vue compiler, linter, formatter, and type checker for
