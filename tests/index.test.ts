@@ -1,5 +1,3 @@
-import type { UserConfig } from "vite-plus";
-
 import { describe, expect, it } from "vite-plus/test";
 
 import {
@@ -8,54 +6,64 @@ import {
   defaultLintConfig,
   defaultPackConfig,
   defineConfig,
-  mergeConfig,
+  mergePresetConfig,
 } from "../src/index.ts";
 
-describe("mergeConfig", () => {
-  it("merges two configs with overrides taking precedence", () => {
-    const base = {
-      fmt: { arrowParens: "avoid", proseWrap: "always" },
-    } satisfies UserConfig;
-    const user = {
-      fmt: { proseWrap: "never" },
-    } satisfies UserConfig;
-    const merged = mergeConfig(base, user);
+describe("mergePresetConfig", () => {
+  it("merges preset fields with user values taking precedence", () => {
+    const merged = mergePresetConfig(
+      { fmt: { arrowParens: "avoid", proseWrap: "always" } },
+      { fmt: { proseWrap: "never" } },
+    );
 
     expect(merged.fmt?.proseWrap).toBe("never");
     expect(merged.fmt?.arrowParens).toBe("avoid");
   });
 
-  it("handles multiple overrides in order", () => {
-    const base = { server: { port: 3000 } };
-    const override1 = { server: { port: 4000 } };
-    const override2 = { server: { port: 5000 } };
-    const merged = mergeConfig(base, override1, override2);
-
-    expect(merged.server?.port).toBe(5000);
-  });
-
-  it("handles nullish configs gracefully", () => {
-    const base = { server: { port: 3000 } };
-    const merged = mergeConfig(base, null, undefined, { server: { open: true } });
+  it("preserves user fields that are not part of the preset", () => {
+    const merged = mergePresetConfig({ fmt: { proseWrap: "always" } }, { server: { port: 3000 } });
 
     expect(merged.server?.port).toBe(3000);
-    expect(merged.server?.open).toBe(true);
+    expect(merged.fmt?.proseWrap).toBe("always");
+  });
+
+  it("does not add fields that are absent from the preset", () => {
+    const merged = mergePresetConfig({ fmt: { proseWrap: "always" } }, {});
+
+    expect(merged).toStrictEqual({ fmt: { proseWrap: "always" } });
+    expect(merged).not.toHaveProperty("lint");
+    expect(merged).not.toHaveProperty("css");
+    expect(merged).not.toHaveProperty("pack");
   });
 
   it("concatenates array values instead of overriding them", () => {
-    const base = {
-      lint: {
-        plugins: ["typescript", "import"],
-      },
-    } satisfies UserConfig;
-    const user = {
-      lint: {
-        plugins: ["unicorn"],
-      },
-    } satisfies UserConfig;
-    const merged = mergeConfig(base, user);
+    const merged = mergePresetConfig(
+      { lint: { plugins: ["typescript", "import"] } },
+      { lint: { plugins: ["unicorn"] } },
+    );
 
-    expect(merged.lint?.plugins).toStrictEqual(["unicorn", "typescript", "import"]);
+    expect(merged.lint?.plugins).toStrictEqual(["typescript", "import", "unicorn"]);
+  });
+
+  it("applies defaults to every pack target instead of adding a target", () => {
+    const merged = mergePresetConfig(
+      { pack: { minify: true } },
+      { pack: [{ entry: "src/a.ts" }, { entry: "src/b.ts" }] },
+    );
+
+    expect(merged.pack).toStrictEqual([
+      { minify: true, entry: "src/a.ts" },
+      { minify: true, entry: "src/b.ts" },
+    ]);
+  });
+
+  it("replaces pack arrays instead of concatenating them", () => {
+    const merged = mergePresetConfig(
+      { pack: { deps: { neverBundle: ["react"] }, minify: true } },
+      { pack: { deps: { neverBundle: ["vue"] } } },
+    );
+
+    expect(merged.pack).toStrictEqual({ deps: { neverBundle: ["vue"] }, minify: true });
   });
 });
 
@@ -99,7 +107,18 @@ describe("defineConfig", () => {
       },
     });
 
-    expect(config.lint?.plugins).toStrictEqual(["react", ...defaultLintConfig.plugins]);
+    expect(config.lint?.plugins).toStrictEqual([...defaultLintConfig.plugins, "react"]);
+  });
+
+  it("applies pack defaults to every user-defined pack target", () => {
+    const config = defineConfig({
+      pack: [{ entry: "src/a.ts" }, { entry: "src/b.ts" }],
+    });
+
+    expect(config.pack).toStrictEqual([
+      { ...defaultPackConfig, entry: "src/a.ts" },
+      { ...defaultPackConfig, entry: "src/b.ts" },
+    ]);
   });
 
   it("supports function configuration", () => {
