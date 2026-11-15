@@ -30,60 +30,52 @@ function mergeUserConfigs(userConfigs: UserConfig[]): UserConfig {
 
 function finalizeConfig(userConfigs: UserConfig[]): UserConfig | Promise<UserConfig> {
   const merged = mergePresetConfig(presetConfig, mergeUserConfigs(userConfigs));
-  const shouldInject = detectVueOrVize() && !hasVizePlugin(merged.plugins);
-  if (shouldInject) {
+  if (detectVueOrVize() && !hasVizePlugin(merged.plugins)) {
     return applyVizeConfig(merged);
   }
   return merged;
 }
 
-function resolveConfigs(configs: ConfigInput[]): ViteUserConfigExport {
-  const flat = flattenConfigs(configs);
+function resolveConfigItems(
+  items: (UserConfig | Promise<UserConfig>)[],
+): UserConfig | Promise<UserConfig> {
+  if (items.some(item => item instanceof Promise)) {
+    return Promise.all(items.map(async item => item)).then(finalizeConfig);
+  }
 
-  if (flat.length === 0) {
+  return finalizeConfig(items as UserConfig[]);
+}
+
+function resolveFunctionConfigs(
+  items: ConfigItem[],
+  env: ConfigEnv,
+): UserConfig | Promise<UserConfig> {
+  const resolved: (UserConfig | Promise<UserConfig>)[] = [];
+  for (const item of items) {
+    if (typeof item === "function") {
+      resolved.push(item(env));
+    } else if (item) {
+      resolved.push(item);
+    }
+  }
+  return resolveConfigItems(resolved);
+}
+
+function resolveConfigs(configs: ConfigInput[]): ViteUserConfigExport {
+  const items = flattenConfigs(configs);
+
+  if (items.length === 0) {
     if (detectVueOrVize()) {
       return applyVizeConfig(presetConfig);
     }
     return presetConfig;
   }
 
-  const hasFunction = flat.some(item => typeof item === "function");
-  if (hasFunction) {
-    return (env: ConfigEnv) => {
-      const resolvedList: (UserConfig | Promise<UserConfig>)[] = [];
-      for (const item of flat) {
-        if (typeof item === "function") {
-          resolvedList.push((item as ConfigFn)(env));
-        } else if (item) {
-          resolvedList.push(item);
-        }
-      }
-
-      const hasAsync = resolvedList.some(item => item instanceof Promise);
-      if (hasAsync) {
-        return (async () => {
-          const syncConfigs = await Promise.all(
-            resolvedList.map(item => (item instanceof Promise ? item : Promise.resolve(item))),
-          );
-          return finalizeConfig(syncConfigs);
-        })();
-      }
-
-      return finalizeConfig(resolvedList as UserConfig[]);
-    };
+  if (items.some(item => typeof item === "function")) {
+    return (env: ConfigEnv) => resolveFunctionConfigs(items, env);
   }
 
-  const hasPromise = flat.some(item => item instanceof Promise);
-  if (hasPromise) {
-    return (async () => {
-      const resolvedList = await Promise.all(
-        flat.map(item => (item instanceof Promise ? item : Promise.resolve(item as UserConfig))),
-      );
-      return finalizeConfig(resolvedList);
-    })();
-  }
-
-  return finalizeConfig(flat as UserConfig[]);
+  return resolveConfigItems(items as (UserConfig | Promise<UserConfig>)[]);
 }
 
 /**
