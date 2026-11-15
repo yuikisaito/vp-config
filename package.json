@@ -46,8 +46,8 @@
     "vite-plus": "catalog:"
   },
   "peerDependencies": {
-    "oxlint-plugin-eslint": "^1.93.0",
     "@vizejs/vite-plugin": "^0.752.0",
+    "oxlint-plugin-eslint": "^1.93.0",
     "vite-plus": "^1.4.0"
   },
   "peerDependenciesMeta": {
