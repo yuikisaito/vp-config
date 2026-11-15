@@ -1,22 +1,10 @@
 import type { ConfigEnv, UserConfig, ViteUserConfigExport } from "vite-plus";
 
-import { defineConfig as defineVitePlusConfig } from "vite-plus";
+import { defineConfig as defineVitePlusConfig, mergeConfig } from "vite-plus";
 
-import { mergeConfig } from "./merge.ts";
-import {
-  defaultCssConfig,
-  defaultFmtConfig,
-  defaultLintConfig,
-  defaultPackConfig,
-} from "./presets/index.ts";
+import { mergePresetConfig } from "./merge/index.ts";
+import { presetConfig } from "./presets/index.ts";
 import { applyVizeConfig, detectVueOrVize, hasVizePlugin } from "./vize.ts";
-
-export const defaultConfig: UserConfig = {
-  css: defaultCssConfig,
-  fmt: defaultFmtConfig,
-  lint: defaultLintConfig,
-  pack: defaultPackConfig,
-};
 
 export type ConfigFn = (env: ConfigEnv) => UserConfig | Promise<UserConfig>;
 export type StaticConfigItem = UserConfig | null | undefined;
@@ -36,12 +24,12 @@ function flattenConfigs(configs: ConfigInput[]): ConfigItem[] {
   return result;
 }
 
-function finalizeConfigSync(userConfigs: UserConfig[]): UserConfig {
-  return mergeConfig(defaultConfig, ...userConfigs);
+function mergeUserConfigs(userConfigs: UserConfig[]): UserConfig {
+  return userConfigs.reduce<UserConfig>((merged, config) => mergeConfig(merged, config), {});
 }
 
-async function finalizeConfig(userConfigs: UserConfig[]): Promise<UserConfig> {
-  const merged = mergeConfig(defaultConfig, ...userConfigs);
+function finalizeConfig(userConfigs: UserConfig[]): UserConfig | Promise<UserConfig> {
+  const merged = mergePresetConfig(presetConfig, mergeUserConfigs(userConfigs));
   const shouldInject = detectVueOrVize() && !hasVizePlugin(merged.plugins);
   if (shouldInject) {
     return applyVizeConfig(merged);
@@ -54,9 +42,9 @@ function resolveConfigs(configs: ConfigInput[]): ViteUserConfigExport {
 
   if (flat.length === 0) {
     if (detectVueOrVize()) {
-      return applyVizeConfig(defaultConfig);
+      return applyVizeConfig(presetConfig);
     }
-    return defaultConfig;
+    return presetConfig;
   }
 
   const hasFunction = flat.some(item => typeof item === "function");
@@ -81,12 +69,7 @@ function resolveConfigs(configs: ConfigInput[]): ViteUserConfigExport {
         })();
       }
 
-      const syncConfigs = resolvedList as UserConfig[];
-      if (detectVueOrVize() && !syncConfigs.some(cfg => hasVizePlugin(cfg.plugins))) {
-        return finalizeConfig(syncConfigs);
-      }
-
-      return finalizeConfigSync(syncConfigs);
+      return finalizeConfig(resolvedList as UserConfig[]);
     };
   }
 
@@ -100,12 +83,7 @@ function resolveConfigs(configs: ConfigInput[]): ViteUserConfigExport {
     })();
   }
 
-  const syncList = flat as UserConfig[];
-  if (detectVueOrVize() && !syncList.some(cfg => hasVizePlugin(cfg.plugins))) {
-    return finalizeConfig(syncList);
-  }
-
-  return finalizeConfigSync(syncList);
+  return finalizeConfig(flat as UserConfig[]);
 }
 
 /**
