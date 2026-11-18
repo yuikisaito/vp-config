@@ -1,9 +1,10 @@
 name: Release
 
 on:
-  push:
-    tags:
-      - "v*"
+  pull_request:
+    branches:
+      - master
+    types: [closed]
 
 defaults:
   run:
@@ -14,9 +15,14 @@ permissions:
 
 jobs:
   check:
+    if:
+      github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref,
+      'release/v')
     runs-on: ubuntu-26.04-arm
     steps:
       - uses: actions/checkout@v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
       - uses: voidzero-dev/setup-vp@v1.22.0
         with:
           cache: true
@@ -38,11 +44,22 @@ jobs:
     steps:
       - uses: actions/checkout@v7.0.1
         with:
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
           fetch-depth: 0
       - uses: voidzero-dev/setup-vp@v1.22.0
         with:
           cache: true
           run-install: true
+      - name: Create tag
+        run: |
+          TAG_NAME="${HEAD_REF#release/}"
+          [[ "$TAG_NAME" =~ ^v ]] || TAG_NAME="v$TAG_NAME"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag "$TAG_NAME"
+          git push origin "$TAG_NAME"
+        env:
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
       - name: Publish
         run: vp pm publish
       - name: Release
