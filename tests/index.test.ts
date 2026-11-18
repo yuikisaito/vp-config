@@ -82,6 +82,19 @@ describe("defineConfig", () => {
     expect(config.plugins).toBeDefined();
   });
 
+  it("resolves oxlint-plugin-eslint as an absolute path in jsPlugins", () => {
+    const config = defineConfig();
+    const eslintPlugin = config.lint?.jsPlugins?.find(
+      p => typeof p === "object" && p !== null && "name" in p && p.name === "eslint-js",
+    );
+
+    expect(eslintPlugin).toBeDefined();
+    const specifier =
+      typeof eslintPlugin === "object" && eslintPlugin !== null ? eslintPlugin.specifier : "";
+    expect(specifier).toMatch(/oxlint-plugin-eslint/u);
+    expect(specifier).not.toBe("oxlint-plugin-eslint");
+  });
+
   it("merges user config object over defaults", () => {
     const config = defineConfig({
       pack: {
