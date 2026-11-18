@@ -1,8 +1,12 @@
 import type { OxlintConfig } from "vite-plus/lint";
 
+import { createRequire } from "node:module";
+
+const require = createRequire(import.meta.url);
+
 export const defaultLintConfig = {
   plugins: ["typescript", "import", "promise", "unicorn", "node", "oxc", "vitest", "jsdoc"],
-  jsPlugins: [{ name: "eslint-js", specifier: "oxlint-plugin-eslint" }],
+  jsPlugins: [{ name: "eslint-js", specifier: require.resolve("oxlint-plugin-eslint") }],
   options: {
     typeAware: true,
     typeCheck: true,
