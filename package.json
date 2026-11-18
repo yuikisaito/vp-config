@@ -37,10 +37,10 @@
   },
   "devDependencies": {
     "@types/node": "^26.6.5",
-    "@vizejs/vite-plugin": "^0.752.0",
+    "@vizejs/vite-plugin": "^0.781.0",
     "bumpp": "^12.3.0",
     "changelogithub": "^15.0.5",
-    "pkg-pr-new": "^0.0.93",
+    "pkg-pr-new": "^0.0.94",
     "typescript": "^7.0.2",
     "vite-plus": "catalog:"
   },
@@ -50,7 +50,7 @@
   "devEngines": {
     "packageManager": {
       "name": "pnpm",
-      "version": "12.18.0",
+      "version": "12.21.0",
       "onFail": "download"
     }
   }
